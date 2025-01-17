@@ -33,6 +33,19 @@ def get_stops(line):
     filtered_stops = [stop for stop in all_stops if stop.get(line_key, False)]
     return jsonify(filtered_stops)
 
+@app.route("/FAKE_ENDPOINT")
+def fake_endpoint():
+    stop_name = request.args.get("stop_name")
+    if not stop_name:
+        return jsonify({"error": "Stop name is required"}), 400
+
+    # Mock response for train arrival
+    mock_response = {
+        "stop_name": stop_name,
+        "minutes": 5  # Mock: Next train arrives in 5 minutes
+    }
+    return jsonify(mock_response)
+
 
 if __name__ == "__main__":
     app.run()

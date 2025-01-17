@@ -5,44 +5,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Train Finder</title>
     <script>
+        // Handle train line selection
         async function fetchStops() {
-            const line = document.getElementById("line-select").value;
+            const line = document.getElementById("train-line").value;
             if (!line) return;
 
-            try {
-                const response = await fetch(`/stops/${line}`);
-                const stops = await response.json();
+            const response = await fetch(`/stops/${line}`);
+            const stops = await response.json();
 
-                const stopsList = document.getElementById("stops-list");
-                stopsList.innerHTML = "";
+            // Populate the autocomplete input
+            const stopInput = document.getElementById("stop-input");
+            const datalist = document.getElementById("stops-list");
+            datalist.innerHTML = ""; // Clear existing options
 
-                if (stops.error) {
-                    stopsList.innerHTML = `<li>${stops.error}</li>`;
-                    return;
-                }
+            stops.forEach(stop => {
+                const option = document.createElement("option");
+                option.value = stop.stop_name;
+                datalist.appendChild(option);
+            });
 
-                stops.forEach(stop => {
-                    const li = document.createElement("li");
-                    li.textContent = `${stop.stop_name} - ${stop.station_descriptive_name}`;
-                    stopsList.appendChild(li);
-                });
-            } catch (error) {
-                console.error("Error fetching stops:", error);
+            stopInput.disabled = false;
+        }
+
+        // Fetch next train times after selecting a stop
+        async function fetchNextTrain() {
+            const stopName = document.getElementById("stop-input").value;
+            if (!stopName) return;
+
+            const response = await fetch(`/FAKE_ENDPOINT?stop_name=${encodeURIComponent(stopName)}`);
+            const data = await response.json();
+
+            const resultDiv = document.getElementById("result");
+            if (data.error) {
+                resultDiv.textContent = `Error: ${data.error}`;
+            } else {
+                resultDiv.textContent = `Next train arrives in ${data.minutes} minutes.`;
             }
         }
     </script>
 </head>
 <body>
-    <h1>Find Your Train</h1>
-    <label for="line-select">Select a line:</label>
-    <select id="line-select" onchange="fetchStops()">
-        <option value="">--Choose a Line--</option>
-        {% for line in lines %}
-        <option value="{{ line }}">{{ line }}</option>
-        {% endfor %}
+    <h1>Find Your Next Train</h1>
+
+    <label for="train-line">Select a Train Line:</label>
+    <select id="train-line" onchange="fetchStops()">
+        <option value="">-- Select a Line --</option>
+        <option value="Pink">Pink</option>
+        <option value="Blue">Blue</option>
+        <option value="Red">Red</option>
+        <option value="Orange">Orange</option>
+        <option value="Green">Green</option>
     </select>
 
-    <h2>Stops:</h2>
-    <ul id="stops-list"></ul>
+    <br><br>
+
+    <label for="stop-input">Enter Train Stop:</label>
+    <input id="stop-input" list="stops-list" disabled placeholder="Type your stop name..." />
+    <datalist id="stops-list"></datalist>
+
+    <button onclick="fetchNextTrain()">Find Next Train</button>
+
+    <br><br>
+    <div id="result"></div>
 </body>
 </html>
