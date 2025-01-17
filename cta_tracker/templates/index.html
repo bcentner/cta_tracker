@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Train Finder</title>
+    <script>
+        async function fetchStops() {
+            const line = document.getElementById("line-select").value;
+            if (!line) return;
+
+            try {
+                const response = await fetch(`/stops/${line}`);
+                const stops = await response.json();
+
+                const stopsList = document.getElementById("stops-list");
+                stopsList.innerHTML = "";
+
+                if (stops.error) {
+                    stopsList.innerHTML = `<li>${stops.error}</li>`;
+                    return;
+                }
+
+                stops.forEach(stop => {
+                    const li = document.createElement("li");
+                    li.textContent = `${stop.stop_name} - ${stop.station_descriptive_name}`;
+                    stopsList.appendChild(li);
+                });
+            } catch (error) {
+                console.error("Error fetching stops:", error);
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Find Your Train</h1>
+    <label for="line-select">Select a line:</label>
+    <select id="line-select" onchange="fetchStops()">
+        <option value="">--Choose a Line--</option>
+        {% for line in lines %}
+        <option value="{{ line }}">{{ line }}</option>
+        {% endfor %}
+    </select>
+
+    <h2>Stops:</h2>
+    <ul id="stops-list"></ul>
+</body>
+</html>
