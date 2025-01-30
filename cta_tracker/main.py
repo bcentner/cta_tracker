@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, jsonify
 import json
 import requests
 from helpers import parse_xml_to_pydantic
+from models.eta import CTATT, ETA
 
 
 
@@ -68,15 +69,15 @@ def fetch_next_train():
     try:
         response = requests.get(api_url, params=params)
         response.raise_for_status()
-        data: CT = parse_xml_to_pydantic(response.text)
+        data: CTATT = parse_xml_to_pydantic(response.text)
         print(f"validated data: {data}")
 
-        next_train = data.get("ctatt", {}).get("eta", [{}])[0]
-        if not next_train:
+        next_trains: list[ETA] = data.eta
+        if not next_trains:
             return jsonify({"error": "No train arrival data available"}), 404
 
-        minutes = next_train.get("arrT", "Unknown") 
-        return jsonify({"stop_name": stop_name, "minutes": minutes})
+        time = next_trains[0].arrival_time
+        return jsonify({"stop_name": stop_name, "time": time})
 
     except requests.exceptions.RequestException as e:
         return jsonify({"error": f"Failed to fetch data: {str(e)}"}), 500

@@ -18,9 +18,9 @@ class ETA(BaseModel):
     is_delayed: int = Field(..., alias="isDly")
     is_fault: int = Field(..., alias="isFlt")  # indicates schedule fault
     flags: Optional[str] = Field(None, alias="flags")
-    latitude: condecimal(max_digits=10, decimal_places=7) = Field(..., alias="lat")
-    longitude: condecimal(max_digits=10, decimal_places=7) = Field(..., alias="lon")
-    heading: int = Field(..., alias="heading")
+    latitude: float| None = Field(..., alias="lat")
+    longitude: float | None = Field(..., alias="lon")
+    heading: str | None = Field(..., alias="heading")
     
 class CTATT(BaseModel):
     time: str = Field(..., alias="tmst")
