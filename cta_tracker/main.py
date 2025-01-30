@@ -1,6 +1,9 @@
 from flask import Flask, render_template, request, jsonify
 import json
 import requests
+from helpers import parse_xml_to_pydantic
+
+
 
 app = Flask(__name__)
 
@@ -40,7 +43,7 @@ def get_stops(line):
     filtered_stops = [stop for stop in all_stops if stop.get(line_key, False)]
     return jsonify(filtered_stops)
 
-@app.route("/FAKE_ENDPOINT", methods=["GET"])
+@app.route("/get_estimate", methods=["GET"])
 def fetch_next_train():
     stop_name = request.args.get("stop_name")
     if not stop_name:
@@ -51,21 +54,22 @@ def fetch_next_train():
     if not stop:
         return jsonify({"error": "Stop not found"}), 404
 
-    stpId = stop["stop_id"]  # Get the stop ID
-    print(f"Found stop: {stpId}")
+    mapId = stop["map_id"]  # Get the stop ID
+    print(f"Found stop: {mapId}")
 
     # Call the CTA API
     api_url = f"http://lapi.transitchicago.com/api/1.0/ttarrivals.aspx"
     params = {
         "key": TRAIN_API_KEY,
-        "stpId": stpId,
+        "mapid": mapId,
         "max": 5
     }
 
     try:
         response = requests.get(api_url, params=params)
-        response.raise_for_status() 
-        data = response.json() 
+        response.raise_for_status()
+        data: CT = parse_xml_to_pydantic(response.text)
+        print(f"validated data: {data}")
 
         next_train = data.get("ctatt", {}).get("eta", [{}])[0]
         if not next_train:

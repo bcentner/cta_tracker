@@ -32,7 +32,7 @@
             const stopName = document.getElementById("stop-input").value;
             if (!stopName) return;
 
-            const response = await fetch(`/FAKE_ENDPOINT?stop_name=${encodeURIComponent(stopName)}`);
+            const response = await fetch(`/get_estimate?stop_name=${encodeURIComponent(stopName)}`);
             const data = await response.json();
 
             const resultDiv = document.getElementById("result");
