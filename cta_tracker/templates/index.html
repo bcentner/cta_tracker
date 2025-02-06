@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Train Finder</title>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
     <script>
         // Handle train line selection
         async function fetchStops() {
@@ -39,7 +40,13 @@
             if (data.error) {
                 resultDiv.textContent = `Error: ${data.error}`;
             } else {
-                resultDiv.textContent = `Next train arrives at ${data.time}`;
+                const trainTime = dayjs(data.time, "YYYYMMDD HH:mm:ss");
+                const now = dayjs();
+
+                const timeDiff = Math.max(0, trainTime.diff(now, 'minute'));
+                const formattedArrivalTime = trainTime.format('h:mm A');
+
+                resultDiv.textContent = `Next train arrives in ${timeDiff} minute(s) at ${formattedArrivalTime}`;
             }
         }
     </script>
