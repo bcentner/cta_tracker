@@ -72,6 +72,19 @@ button:active {
     transform: translateY(0);
 }
 
+button:disabled {
+    background-color: #a0aec0;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+button:disabled:hover {
+    background-color: #a0aec0;
+    transform: none;
+    box-shadow: none;
+}
+
 #result {
     margin-top: 25px;
     background-color: #ebf8ff;

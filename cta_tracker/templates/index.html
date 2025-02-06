@@ -13,10 +13,16 @@
             const line = document.getElementById("train-line").value;
             if (!line) return;
 
+            // Reset stop input and clear result
+            const stopInput = document.getElementById("stop-input");
+            const findTrainBtn = document.getElementById("find-train-btn");
+            stopInput.value = "";
+            document.getElementById("result").textContent = "";
+            findTrainBtn.disabled = true;  // Disable button when changing lines
+
             const response = await fetch(`/stops/${line}`);
             const stops = await response.json();
 
-            const stopInput = document.getElementById("stop-input");
             const datalist = document.getElementById("stops-list");
             datalist.innerHTML = ""; // Clear existing options
 
@@ -27,6 +33,12 @@
             });
 
             stopInput.disabled = false;
+        }
+
+        function handleStopInput() {
+            const stopInput = document.getElementById("stop-input");
+            const findTrainBtn = document.getElementById("find-train-btn");
+            findTrainBtn.disabled = !stopInput.value;
         }
 
         // Fetch next train times after selecting a stop
@@ -68,10 +80,10 @@
     <br><br>
 
     <label for="stop-input">Enter Train Stop:</label>
-    <input id="stop-input" list="stops-list" disabled placeholder="Type your stop name..." />
+    <input id="stop-input" list="stops-list" disabled placeholder="Type your stop name..." onchange="handleStopInput()"/>
     <datalist id="stops-list"></datalist>
 
-    <button onclick="fetchNextTrain()">Find Next Train</button>
+    <button id="find-train-btn" onclick="fetchNextTrain()" disabled>Find Next Train</button>
 
     <br><br>
     <div id="result"></div>
