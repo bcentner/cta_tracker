@@ -14,3 +14,11 @@ Customer API: https://www.transitchicago.com/assets/1/6/cta_Customer_Alerts_API_
 
 
 <!-- TODO: project name ideas? CTEZ, CTeAsy, CTEasy, CTeasy -->
+
+## Host with Ngrok
+- *choco install ngrok*
+- Sign up at https://dashboard.ngrok.com/signup
+- Run config command:
+    ngrok config add-authtoken ~your_token~
+- Start flask app
+- In a seperate terminal, run *ngrok http ~port_running_flask~*
