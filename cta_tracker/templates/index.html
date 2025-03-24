@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Train Finder</title>
+    <title>CTeAsy - CTA Train Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
     <!-- <link rel="stylesheet" href="/static/css/styles.css"> -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
@@ -18,7 +18,11 @@
             const findTrainBtn = document.getElementById("find-train-btn");
             stopInput.value = "";
             document.getElementById("result").textContent = "";
+            document.getElementById("result").style.display = "none";
             findTrainBtn.disabled = true;  // Disable button when changing lines
+
+            // Update selected line indicator
+            updateLineIndicator(line);
 
             const response = await fetch(`/stops/${line}`);
             const stops = await response.json();
@@ -35,6 +39,18 @@
             stopInput.disabled = false;
         }
 
+        function updateLineIndicator(line) {
+            const indicator = document.getElementById("line-indicator");
+            indicator.className = "line-indicator";
+            
+            if (line) {
+                indicator.classList.add(line.toLowerCase());
+                indicator.style.display = "block";
+            } else {
+                indicator.style.display = "none";
+            }
+        }
+
         function handleStopInput() {
             const stopInput = document.getElementById("stop-input");
             const findTrainBtn = document.getElementById("find-train-btn");
@@ -46,46 +62,76 @@
             const stopName = document.getElementById("stop-input").value;
             if (!stopName) return;
 
-            const response = await fetch(`/get_estimate?stop_name=${encodeURIComponent(stopName)}`);
-            const data = await response.json();
+            const loadingIndicator = document.getElementById("loading");
+            loadingIndicator.style.display = "block";
+            
+            try {
+                const response = await fetch(`/get_estimate?stop_name=${encodeURIComponent(stopName)}`);
+                const data = await response.json();
 
-            const resultDiv = document.getElementById("result");
-            if (data.error) {
-                resultDiv.textContent = `Error: ${data.error}`;
-            } else {
-                const trainTime = dayjs(data.time, "YYYYMMDD HH:mm:ss");
-                const now = dayjs();
+                const resultDiv = document.getElementById("result");
+                resultDiv.style.display = "block";
+                
+                if (data.error) {
+                    resultDiv.textContent = `Error: ${data.error}`;
+                    resultDiv.classList.add("error");
+                } else {
+                    resultDiv.classList.remove("error");
+                    const trainTime = dayjs(data.time, "YYYYMMDD HH:mm:ss");
+                    const now = dayjs();
 
-                const timeDiff = Math.max(0, trainTime.diff(now, 'minute'));
-                const formattedArrivalTime = trainTime.format('h:mm A');
+                    const timeDiff = Math.max(0, trainTime.diff(now, 'minute'));
+                    const formattedArrivalTime = trainTime.format('h:mm A');
 
-                resultDiv.textContent = `Next train arrives in ${timeDiff} minute(s) at ${formattedArrivalTime}`;
+                    resultDiv.textContent = `Next train arrives in ${timeDiff} minute(s) at ${formattedArrivalTime}`;
+                }
+            } catch (error) {
+                const resultDiv = document.getElementById("result");
+                resultDiv.style.display = "block";
+                resultDiv.textContent = "Error fetching train times. Please try again.";
+                resultDiv.classList.add("error");
+            } finally {
+                loadingIndicator.style.display = "none";
             }
         }
     </script>
 </head>
 <body>
-    <h1>Find Your Next Train</h1>
+    <div class="container">
+        <div class="logo-container">
+            <div class="logo">
+                <span class="cta-text">CTA</span>
+                <span class="easy-text">easy</span>
+            </div>
+            <div class="tagline">Find your train. Simple.</div>
+        </div>
+        
+        <div class="form-group">
+            <label for="train-line">Select Train Line</label>
+            <select id="train-line" onchange="fetchStops()">
+                <option value="">-- Select a Line --</option>
+                <option value="Pink">Pink</option>
+                <option value="Blue">Blue</option>
+                <option value="Red">Red</option>
+                <option value="Orange">Orange</option>
+                <option value="Green">Green</option>
+            </select>
+            <div id="line-indicator" class="line-indicator" style="display:none;"></div>
+        </div>
 
-    <label for="train-line">Select a Train Line:</label>
-    <select id="train-line" onchange="fetchStops()">
-        <option value="">-- Select a Line --</option>
-        <option value="Pink">Pink</option>
-        <option value="Blue">Blue</option>
-        <option value="Red">Red</option>
-        <option value="Orange">Orange</option>
-        <option value="Green">Green</option>
-    </select>
+        <div class="form-group">
+            <label for="stop-input">Enter Train Stop</label>
+            <input id="stop-input" list="stops-list" disabled placeholder="Type your stop name..." onchange="handleStopInput()"/>
+            <datalist id="stops-list"></datalist>
+        </div>
 
-    <br><br>
-
-    <label for="stop-input">Enter Train Stop:</label>
-    <input id="stop-input" list="stops-list" disabled placeholder="Type your stop name..." onchange="handleStopInput()"/>
-    <datalist id="stops-list"></datalist>
-
-    <button id="find-train-btn" onclick="fetchNextTrain()" disabled>Find Next Train</button>
-
-    <br><br>
-    <div id="result"></div>
+        <button id="find-train-btn" onclick="fetchNextTrain()" disabled>Find Next Train</button>
+        
+        <div id="loading" style="display:none; text-align:center; margin-top:20px;">
+            Loading...
+        </div>
+        
+        <div id="result" style="display:none;"></div>
+    </div>
 </body>
 </html>
