@@ -8,6 +8,34 @@
     <!-- <link rel="stylesheet" href="/static/css/styles.css"> -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <script>
+        // Cache object to store recent requests
+        const requestCache = {
+            data: {},
+            maxAge: 3 * 60 * 1000, // 3 minutes in milliseconds
+            
+            // Store data in cache
+            set: function(stopName, data) {
+                this.data[stopName] = {
+                    data: data,
+                    timestamp: Date.now()
+                };
+            },
+            
+            // Get data from cache if it exists and is not expired
+            get: function(stopName) {
+                const cached = this.data[stopName];
+                if (!cached) return null;
+                
+                const age = Date.now() - cached.timestamp;
+                if (age > this.maxAge) {
+                    delete this.data[stopName];
+                    return null;
+                }
+                
+                return cached.data;
+            }
+        };
+
         // Handle train line selection
         async function fetchStops() {
             const line = document.getElementById("train-line").value;
@@ -57,6 +85,30 @@
             findTrainBtn.disabled = !stopInput.value;
         }
 
+        // Display the result with proper formatting
+        function displayResult(data, isCached = false) {
+            const resultDiv = document.getElementById("result");
+            resultDiv.style.display = "block";
+            
+            if (data.error) {
+                resultDiv.textContent = `Error: ${data.error}`;
+                resultDiv.classList.add("error");
+            } else {
+                resultDiv.classList.remove("error");
+                const trainTime = dayjs(data.time, "YYYYMMDD HH:mm:ss");
+                const now = dayjs();
+
+                const timeDiff = Math.max(0, trainTime.diff(now, 'minute'));
+                const formattedArrivalTime = trainTime.format('h:mm A');
+
+                let resultText = `Next train arrives in ${timeDiff} minute(s) at ${formattedArrivalTime}`;
+                if (isCached) {
+                    resultText += " (cached)";
+                }
+                resultDiv.textContent = resultText;
+            }
+        }
+
         // Fetch next train times after selecting a stop
         async function fetchNextTrain() {
             const stopName = document.getElementById("stop-input").value;
@@ -66,25 +118,23 @@
             loadingIndicator.style.display = "block";
             
             try {
+                // Check cache first
+                const cachedData = requestCache.get(stopName);
+                if (cachedData) {
+                    displayResult(cachedData, true);
+                    loadingIndicator.style.display = "none";
+                    return;
+                }
+                
+                // If not in cache, make API call
                 const response = await fetch(`/get_estimate?stop_name=${encodeURIComponent(stopName)}`);
                 const data = await response.json();
-
-                const resultDiv = document.getElementById("result");
-                resultDiv.style.display = "block";
                 
-                if (data.error) {
-                    resultDiv.textContent = `Error: ${data.error}`;
-                    resultDiv.classList.add("error");
-                } else {
-                    resultDiv.classList.remove("error");
-                    const trainTime = dayjs(data.time, "YYYYMMDD HH:mm:ss");
-                    const now = dayjs();
-
-                    const timeDiff = Math.max(0, trainTime.diff(now, 'minute'));
-                    const formattedArrivalTime = trainTime.format('h:mm A');
-
-                    resultDiv.textContent = `Next train arrives in ${timeDiff} minute(s) at ${formattedArrivalTime}`;
-                }
+                // Store in cache
+                requestCache.set(stopName, data);
+                
+                // Display result
+                displayResult(data);
             } catch (error) {
                 const resultDiv = document.getElementById("result");
                 resultDiv.style.display = "block";

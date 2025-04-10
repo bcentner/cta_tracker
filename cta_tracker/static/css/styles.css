@@ -198,12 +198,27 @@ button:disabled:hover {
     font-weight: 400;
     animation: fadeIn 0.3s ease-out;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    position: relative;
+}
+
+#result::after {
+    content: attr(data-cached);
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 0.8rem;
+    color: #666;
+    font-style: italic;
 }
 
 #result.error {
     background-color: #fff5f5;
     border-left-color: #d32f2f;
     color: #d32f2f;
+}
+
+#result.error::after {
+    display: none;
 }
 
 @keyframes fadeIn {
