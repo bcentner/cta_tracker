@@ -1,8 +1,8 @@
 from flask import Flask, render_template, request, jsonify
 import json
 import requests
-from helpers import parse_xml_to_pydantic
-from models.eta import CTATT, ETA
+from cta_tracker.helpers import parse_xml_to_pydantic
+from cta_tracker.models.eta import CTATT, ETA
 
 
 

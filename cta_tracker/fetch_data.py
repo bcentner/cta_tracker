@@ -1,6 +1,5 @@
 import requests
 import json
-import os
 
 def get_list_of_el_stops():
     resp = requests.get("https://data.cityofchicago.org/resource/8pix-ypme.json")

@@ -1,5 +1,5 @@
 import xmltodict
-from models.eta import CTATT
+from cta_tracker.models.eta import CTATT
 
 def parse_xml_to_pydantic(xml_data: str) -> CTATT:
     # Convert XML to dict
