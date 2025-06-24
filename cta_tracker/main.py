@@ -6,7 +6,7 @@ from cta_tracker.models.eta import CTATT, ETA
 
 
 
-app = Flask(__name__, static_folder="static")
+app = Flask(__name__, static_folder="static", static_url_path="/cta-tracker/static")
 
 with open("cta_tracker/resources/list_of_el_stops.json", "r") as f:
     all_stops = json.load(f)
