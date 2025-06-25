@@ -1,12 +1,15 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 import json
 import requests
 from cta_tracker.helpers import parse_xml_to_pydantic
 from cta_tracker.models.eta import CTATT, ETA
 
-
-
 app = Flask(__name__, static_folder="static", static_url_path="/cta-tracker/static")
+
+# Additional static file route for development access
+@app.route('/static/<path:filename>')
+def static_files(filename):
+    return send_from_directory('static', filename)
 
 with open("cta_tracker/resources/list_of_el_stops.json", "r") as f:
     all_stops = json.load(f)
@@ -82,6 +85,20 @@ def fetch_next_train():
     except requests.exceptions.RequestException as e:
         return jsonify({"error": f"Failed to fetch data: {str(e)}"}), 500
 
+# WSGI application wrapper for subdirectory deployment
+class PrefixMiddleware:
+    def __init__(self, app, prefix='/cta-tracker'):
+        self.app = app
+        self.prefix = prefix
+
+    def __call__(self, environ, start_response):
+        if environ.get('PATH_INFO', '').startswith(self.prefix):
+            environ['PATH_INFO'] = environ['PATH_INFO'][len(self.prefix):]
+            environ['SCRIPT_NAME'] = self.prefix
+        return self.app(environ, start_response)
+
+# Wrap the app for subdirectory deployment
+application = PrefixMiddleware(app)
 
 if __name__ == "__main__":
     app.run()

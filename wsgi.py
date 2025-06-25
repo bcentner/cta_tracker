@@ -1,4 +1,4 @@
-from cta_tracker.main import app
+from cta_tracker.main import application
 
 if __name__ == "__main__":
-    app.run()
+    application.run()
