@@ -37,7 +37,6 @@ def get_stops(line):
         "Brown": "brn"
     }.get(line, None)
 
-
     if line_key is None:
         return jsonify({"error": "Invalid line color"}), 400
     
@@ -84,6 +83,24 @@ def fetch_next_train():
 
     except requests.exceptions.RequestException as e:
         return jsonify({"error": f"Failed to fetch data: {str(e)}"}), 500
+
+# WSGI application wrapper for subdirectory deployment
+class PrefixMiddleware:
+    def __init__(self, app, prefix='/cta-tracker'):
+        self.app = app
+        self.prefix = prefix
+
+    def __call__(self, environ, start_response):
+        if environ.get('PATH_INFO', '').startswith(self.prefix):
+            environ['PATH_INFO'] = environ['PATH_INFO'][len(self.prefix):]
+            environ['SCRIPT_NAME'] = self.prefix
+        return self.app(environ, start_response)
+
+# Wrap the app for subdirectory deployment
+application = PrefixMiddleware(app)
+@app.route('/static/<path:filename>')
+def static_files_dev(filename):
+    return send_from_directory(app.static_folder, filename)
 
 # WSGI application wrapper for subdirectory deployment
 class PrefixMiddleware:

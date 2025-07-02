@@ -40,6 +40,8 @@
         async function fetchStops() {
             const line = document.getElementById("train-line").value;
             if (!line) return;
+            
+            console.log('fetchStops called with line:', line);
 
             // Reset stop input and clear result
             const stopInput = document.getElementById("stop-input");
@@ -52,11 +54,17 @@
             // Update selected line indicator
             updateLineIndicator(line);
 
-            const response = await fetch(`/stops/${line}`);
+            const basePath = window.location.pathname.startsWith('/cta-tracker') ? '/cta-tracker' : '';
+            const response = await fetch(`${basePath}/stops/${line}`);
+            if (!response.ok) {
+                console.error('Failed to fetch stops:', response.status, response.statusText);
+                return;
+            }
             const stops = await response.json();
+            console.log('Received stops:', stops);
 
             const datalist = document.getElementById("stops-list");
-            datalist.innerHTML = ""; // Clear existing options
+            datalist.innerHTML = "";
 
             stops.forEach(stop => {
                 const option = document.createElement("option");
@@ -127,7 +135,9 @@
                 }
                 
                 // If not in cache, make API call
-                const response = await fetch(`/get_estimate?stop_name=${encodeURIComponent(stopName)}`);
+                // Get the base path for API calls
+                const basePath = window.location.pathname.startsWith('/cta-tracker') ? '/cta-tracker' : '';
+                const response = await fetch(`${basePath}/get_estimate?stop_name=${encodeURIComponent(stopName)}`);
                 const data = await response.json();
                 
                 // Store in cache
