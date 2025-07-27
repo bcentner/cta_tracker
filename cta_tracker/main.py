@@ -1,8 +1,15 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory
 import json
 import requests
+import logging
 from cta_tracker.helpers import parse_xml_to_pydantic
 from cta_tracker.models.eta import CTATT, ETA
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__, static_folder="static", static_url_path="/cta-tracker/static")
 
@@ -58,7 +65,7 @@ def fetch_next_train():
         return jsonify({"error": "Stop not found"}), 404
 
     mapId = stop["map_id"]  # Get the stop ID
-    print(f"Found stop: {mapId}")
+    logger.info(f"Found stop: {mapId}")
 
     # Call the CTA API
     api_url = f"http://lapi.transitchicago.com/api/1.0/ttarrivals.aspx"
@@ -72,7 +79,7 @@ def fetch_next_train():
         response = requests.get(api_url, params=params)
         response.raise_for_status()
         data: CTATT = parse_xml_to_pydantic(response.text)
-        print(f"validated data: {data}")
+        logger.info(f"validated data: {data}")
 
         next_trains: list[ETA] = data.eta
         if not next_trains:
